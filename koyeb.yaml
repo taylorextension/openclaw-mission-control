@@ -1,0 +1,32 @@
+name: openclaw-mission-control
+
+services:
+  - name: mission-control
+    type: web
+    git:
+      repository: github.com/taylorextension/openclaw-mission-control
+      branch: main
+    dockerfile: Dockerfile.koyeb
+    env:
+      - name: DATABASE_URL
+        fromDatabase:
+          name: mission-control-db
+          generated: true
+      - name: AUTH_MODE
+        value: local
+      - name: LOCAL_AUTH_TOKEN
+        value: VVP6FoxdVYCpExCleNSvj5l1B0oF4G/n0bWpqj2Vx2LlhXsyEQigtw==
+      - name: CORS_ORIGINS
+        value: "*"
+      - name: DB_AUTO_MIGRATE
+        value: "true"
+      - name: LOG_LEVEL
+        value: INFO
+    ports:
+      - port: 8000
+        protocol: http
+
+databases:
+  - name: mission-control-db
+    type: postgres
+    version: "16"
