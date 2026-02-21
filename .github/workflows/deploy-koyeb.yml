@@ -1,0 +1,24 @@
+name: Deploy to Koyeb
+
+on:
+  push:
+    branches: [ master, main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Install Koyeb CLI
+      run: |
+        curl -fsSL https://raw.githubusercontent.com/koyeb/koyeb-cli/master/install.sh | bash
+        echo "$HOME/.koyeb/bin" >> $GITHUB_PATH
+    
+    - name: Deploy to Koyeb
+      env:
+        KOYEB_TOKEN: ${{ secrets.KOYEB_TOKEN }}
+      run: |
+        koyeb login --token "$KOYEB_TOKEN"
+        koyeb app init --name openclaw-mission-control || true
+        koyeb deploy --app openclaw-mission-control --service mission-control --port 8000 --dockerfile Dockerfile.koyeb --git github.com/taylorextension/openclaw-mission-control --git-branch master
