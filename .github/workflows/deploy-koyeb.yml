@@ -24,5 +24,22 @@ jobs:
     - name: Deploy to Koyeb
       run: |
         export PATH="$HOME/.koyeb/bin:$PATH"
-        koyeb app init --name openclaw-mission-control || true
-        koyeb deploy --app openclaw-mission-control --service mission-control --port 8000 --dockerfile Dockerfile.koyeb --git github.com/taylorextension/openclaw-mission-control --git-branch master
+        # Criar app se não existir
+        koyeb app create openclaw-mission-control 2>/dev/null || true
+        # Criar serviço
+        koyeb service create mission-control \
+          --app openclaw-mission-control \
+          --git github.com/taylorextension/openclaw-mission-control \
+          --git-branch master \
+          --dockerfile Dockerfile.koyeb \
+          --port 8000 \
+          --env AUTH_MODE=local \
+          --env LOCAL_AUTH_TOKEN=k1vPxUkx7rrKtPXeszrZzFJgP5oBZa3pXkwR5gp4CdkVaMXTYHqK/w== \
+          --env CORS_ORIGINS=* \
+          --env DB_AUTO_MIGRATE=true \
+          --env LOG_LEVEL=INFO \
+          --instance-type free \
+          2>/dev/null || \
+        koyeb service update mission-control \
+          --app openclaw-mission-control \
+          --dockerfile Dockerfile.koyeb
