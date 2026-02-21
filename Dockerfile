@@ -1,4 +1,3 @@
-# Backend only - Frontend build disabled temporarily
 FROM python:3.11-slim
 WORKDIR /app
 
@@ -7,9 +6,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     postgresql-client curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Copiar arquivos de dependências
+COPY backend/pyproject.toml backend/uv.lock ./
+
 # Instalar dependências Python
-COPY backend/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install uv && uv pip install --system -r pyproject.toml
 
 # Copiar código backend
 COPY backend/ ./backend/
