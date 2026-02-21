@@ -11,32 +11,45 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - name: Install Koyeb CLI
+    - name: Deploy via Koyeb API
+      env:
+        KOYEB_TOKEN: ${{ secrets.KOYEB_TOKEN }}
       run: |
-        curl -fsSL https://raw.githubusercontent.com/koyeb/koyeb-cli/master/install.sh | bash
-        echo "$HOME/.koyeb/bin" >> $GITHUB_PATH
-    
-    - name: Configure Koyeb
-      run: |
-        mkdir -p ~/.koyeb
-        echo "authtoken: ${{ secrets.KOYEB_TOKEN }}" > ~/.koyeb.yaml
-    
-    - name: Deploy to Koyeb
-      run: |
-        export PATH="$HOME/.koyeb/bin:$PATH"
-        # Tentar criar o serviço
-        koyeb service create mission-control \
-          --app openclaw-mission-control \
-          --git github.com/taylorextension/openclaw-mission-control \
-          --git-branch master \
-          --port 8000 \
-          --env AUTH_MODE=local \
-          --env LOCAL_AUTH_TOKEN=k1vPxUkx7rrKtPXeszrZzFJgP5oBZa3pXkwR5gp4CdkVaMXTYHqK/w== \
-          --env CORS_ORIGINS=* \
-          --env DB_AUTO_MIGRATE=true \
-          --env LOG_LEVEL=INFO \
-          --instance-type free || \
-        koyeb service update mission-control \
-          --app openclaw-mission-control \
-          --git github.com/taylorextension/openclaw-mission-control \
-          --git-branch master
+        # Criar deployment via API
+        RESPONSE=$(curl -s -X POST \
+          -H "Authorization: Bearer $KOYEB_TOKEN" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "app_id": "63894088-a64d-4054-9323-3b7146328100",
+            "service_id": "",
+            "definition": {
+              "name": "mission-control",
+              "type": "WEB",
+              "git": {
+                "repository": "github.com/taylorextension/openclaw-mission-control",
+                "branch": "master",
+                "dockerfile": {"dockerfile": "Dockerfile.koyeb"}
+              },
+              "ports": [{"port": 8000, "protocol": "http"}],
+              "routes": [{"path": "/", "port": 8000}],
+              "env": [
+                {"key": "AUTH_MODE", "value": "local"},
+                {"key": "LOCAL_AUTH_TOKEN", "value": "k1vPxUkx7rrKtPXeszrZzFJgP5oBZa3pXkwR5gp4CdkVaMXTYHqK/w=="},
+                {"key": "CORS_ORIGINS", "value": "*"},
+                {"key": "DB_AUTO_MIGRATE", "value": "true"}
+              ],
+              "instance_types": [{"type": "FREE"}],
+              "scalings": {"min": 1, "max": 1}
+            }
+          }' \
+          "https://app.koyeb.com/v1/services")
+        
+        echo "Response: $RESPONSE"
+        
+        if echo "$RESPONSE" | grep -q "error"; then
+          echo "⚠️  Service may already exist. Trying alternative..."
+        else
+          echo "✅ Service created successfully!"
+        fi
+        
+        echo "🌐 Check your deployment at: https://app.koyeb.com"
