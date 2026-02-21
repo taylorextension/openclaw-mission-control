@@ -22,10 +22,14 @@ RUN pip install uv && uv pip install --system -r pyproject.toml
 # Copiar código backend
 COPY backend/ ./backend/
 
+# Copiar script de inicialização
+COPY start.sh ./
+RUN chmod +x start.sh
+
 # Healthcheck
 HEALTHCHECK --interval=5s --timeout=3s --start-period=10s --retries=10 \
     CMD curl -f http://localhost:8000/healthz || exit 1
 
 EXPOSE 8000
 
-CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["./start.sh"]
