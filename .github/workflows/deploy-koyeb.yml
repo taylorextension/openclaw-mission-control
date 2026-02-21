@@ -24,7 +24,6 @@ jobs:
     - name: Deploy to Koyeb
       run: |
         export PATH="$HOME/.koyeb/bin:$PATH"
-        # Deploy usando koyeb.yaml
         koyeb app create openclaw-mission-control 2>/dev/null || true
-        koyeb service create --config koyeb.yaml 2>/dev/null || \
-        koyeb service update --config koyeb.yaml
+        koyeb service create mission-control --app openclaw-mission-control 2>/dev/null || \
+        koyeb service update mission-control --app openclaw-mission-control
