@@ -16,10 +16,13 @@ jobs:
         curl -fsSL https://raw.githubusercontent.com/koyeb/koyeb-cli/master/install.sh | bash
         echo "$HOME/.koyeb/bin" >> $GITHUB_PATH
     
-    - name: Deploy to Koyeb
-      env:
-        KOYEB_TOKEN: ${{ secrets.KOYEB_TOKEN }}
+    - name: Configure Koyeb
       run: |
-        koyeb login --token "$KOYEB_TOKEN"
+        mkdir -p ~/.koyeb
+        echo "authtoken: ${{ secrets.KOYEB_TOKEN }}" > ~/.koyeb.yaml
+    
+    - name: Deploy to Koyeb
+      run: |
+        export PATH="$HOME/.koyeb/bin:$PATH"
         koyeb app init --name openclaw-mission-control || true
         koyeb deploy --app openclaw-mission-control --service mission-control --port 8000 --dockerfile Dockerfile.koyeb --git github.com/taylorextension/openclaw-mission-control --git-branch master
